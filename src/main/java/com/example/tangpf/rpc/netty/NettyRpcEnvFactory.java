@@ -3,6 +3,7 @@ package com.example.tangpf.rpc.netty;
 import com.example.tangpf.rpc.RpcConf;
 import com.example.tangpf.rpc.RpcEnv;
 import com.example.tangpf.rpc.RpcEnvConfig;
+import com.example.tangpf.util.Utils;
 
 /**
  * @Author tangpf
@@ -11,12 +12,20 @@ import com.example.tangpf.rpc.RpcEnvConfig;
  */
 public class NettyRpcEnvFactory {
 
-    public RpcEnv create(RpcEnvConfig config){
+    public RpcEnv create(RpcEnvConfig config) {
         RpcConf conf = config.getConf();
+        NettyRpcEnv nettyEnv = new NettyRpcEnv();
 
-
-
-        return null;
+        if (!config.isClientMode()) {
+            try {
+                Utils.startServiceOnPort(config.getBindAddress(),config.getPort(),nettyEnv,conf, config.getName());
+            } catch (Exception e) {
+                nettyEnv.shutdown();
+                e.printStackTrace();
+                throw e;
+            }
+        }
+        return nettyEnv;
     }
 
 }
