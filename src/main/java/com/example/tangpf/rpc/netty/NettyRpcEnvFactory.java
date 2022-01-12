@@ -14,7 +14,7 @@ public class NettyRpcEnvFactory {
 
     public RpcEnv create(RpcEnvConfig config) {
         RpcConf conf = config.getConf();
-        NettyRpcEnv nettyEnv = new NettyRpcEnv();
+        NettyRpcEnv nettyEnv = new NettyRpcEnv(conf);
 
         if (!config.isClientMode()) {
             try {
