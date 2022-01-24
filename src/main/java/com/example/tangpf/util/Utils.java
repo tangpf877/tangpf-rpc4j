@@ -29,7 +29,7 @@ public class Utils {
         if (0 < startPort && startPort < 1024) {
             log.warn("It is recommended that port should be between 1024 and 65535(inclusive), or 0 for a random free port.");
         }
-        int maxTries = conf.getPortMaxRetries();
+        int maxTries = conf.portMaxRetries();
         for (int offset = 0; offset < maxTries + 1; offset++) {
             int tryPort = startPort == 0 ? startPort : userPort(startPort, offset);
             try {

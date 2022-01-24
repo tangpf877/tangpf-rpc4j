@@ -16,7 +16,7 @@ import java.util.Properties;
  */
 public class ConfigReader {
 
-    private Properties p = new Properties();
+    private final Properties p = new Properties();
 
     public ConfigReader(String fileName) {
         /**
@@ -27,6 +27,19 @@ public class ConfigReader {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+
+    public String getString(String key, String defaultValue) {
+        return p.getProperty(key, defaultValue);
+    }
+
+    public int getInt(String key,String defaultValue){
+        return Integer.parseInt(p.getProperty(key, defaultValue));
+    }
+
+    public boolean getBoolean(String key,String defaultValue){
+        return Boolean.parseBoolean(p.getProperty(key,defaultValue));
     }
 
 }
