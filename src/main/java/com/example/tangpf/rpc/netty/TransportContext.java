@@ -3,7 +3,9 @@ package com.example.tangpf.rpc.netty;
 import com.example.tangpf.rpc.RpcConf;
 import com.example.tangpf.rpc.RpcHandler;
 import com.example.tangpf.rpc.netty.server.TransportServer;
+import io.netty.channel.socket.SocketChannel;
 import lombok.Getter;
+import org.apache.spark.network.server.TransportChannelHandler;
 
 import java.util.List;
 
@@ -24,5 +26,14 @@ public class TransportContext {
 
     public TransportServer createServer(String host, int port) {
         return new TransportServer(this, host, port, rpcHandler);
+    }
+
+    public void initializePipeline(SocketChannel channel, RpcHandler channelRpcHandler) {
+        TransportChannelHandler channelHandler = createChannelHandler(channel, channelRpcHandler);
+
+    }
+
+    private TransportChannelHandler createChannelHandler(SocketChannel channel, RpcHandler channelRpcHandler) {
+        return null;
     }
 }

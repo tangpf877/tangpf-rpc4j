@@ -5,12 +5,18 @@ import com.example.tangpf.rpc.RpcHandler;
 import com.example.tangpf.rpc.netty.TransportContext;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.concurrent.DefaultThreadFactory;
+import org.apache.spark.network.server.TransportServerBootstrap;
 import org.apache.spark.network.util.NettyUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 
@@ -20,18 +26,20 @@ import java.io.Closeable;
  * @Version 1.0
  */
 public class TransportServer implements Closeable {
+    private static final Logger logger = LoggerFactory.getLogger(TransportServer.class);
+
     private int port = -1;
     private final TransportContext context;
     private final RpcConf conf;
-    private final RpcHandler rpcHandler;
+    private final RpcHandler appRpcHandler;
     private ServerBootstrap bootstrap;
     private final PooledByteBufAllocator pooledAllocator;
 
     public TransportServer(TransportContext context, String hostToBind, int portToBind,
-                           RpcHandler rpcHandler) {
+                           RpcHandler appRpcHandler) {
         this.context = context;
         this.conf = context.getConf();
-        this.rpcHandler = rpcHandler;
+        this.appRpcHandler = appRpcHandler;
         if (conf.sharedByteBufAllocators()) {
             this.pooledAllocator = NettyUtils.getSharedPooledByteBufAllocator(
                     conf.preferDirectBufs(), true);
@@ -62,9 +70,9 @@ public class TransportServer implements Closeable {
         bootstrap = new ServerBootstrap()
                 .group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
-                .option(ChannelOption.ALLOCATOR,this.pooledAllocator)
-                .childOption(ChannelOption.ALLOCATOR,this.pooledAllocator);
-        if(conf.backLog()>0){
+                .option(ChannelOption.ALLOCATOR, this.pooledAllocator)
+                .childOption(ChannelOption.ALLOCATOR, this.pooledAllocator);
+        if (conf.backLog() > 0) {
             bootstrap.option(ChannelOption.SO_BACKLOG, conf.backLog());
         }
         if (conf.receiveBuffer() > 0) {
@@ -78,6 +86,14 @@ public class TransportServer implements Closeable {
         if (conf.enableTcpKeepAlive()) {
             bootstrap.childOption(ChannelOption.SO_KEEPALIVE, true);
         }
+        bootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
+            @Override
+            protected void initChannel(SocketChannel ch) {
+                logger.debug("New connection accepted for remote address {}.", ch.remoteAddress());
+                RpcHandler rpcHandler = appRpcHandler;
+                context.initializePipeline(ch, rpcHandler);
+            }
+        });
 
 
     }
